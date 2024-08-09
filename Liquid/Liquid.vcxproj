@@ -31,6 +31,9 @@
     <ClInclude Include="Headers\Physics.hpp" />
     <ClInclude Include="Headers\Water.hpp" />
   </ItemGroup>
+  <ItemGroup>
+    <Image Include="Resources\water.png" />
+  </ItemGroup>
   <PropertyGroup Label="Globals">
     <VCProjectVersion>17.0</VCProjectVersion>
     <Keyword>Win32Proj</Keyword>

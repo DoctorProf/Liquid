@@ -1,6 +1,9 @@
 #include <iostream>
 #include "Headers/Physics.hpp"
 #include <thread>
+#include <SFML/GpuPreference.hpp>
+
+#define SFML_DEFINE_DISCRETE_GPU_PREFERENCE
 
 VertexArray createGrid(int radius, float& width, float& height)
 {
@@ -53,7 +56,6 @@ void simulation(std::vector<Particle>& water, bool& running, bool& pause, float&
 			if (!pause)
 			{
 				physics::applyGravity(water);
-				physics::applyAirFriction(water);
 				physics::updateDerivatives(water);
 				physics::collisionWithBoundaries(water, width, height);
 				physics::collisionParticles(water);
@@ -65,11 +67,15 @@ void simulation(std::vector<Particle>& water, bool& running, bool& pause, float&
 int main()
 {
 	ContextSettings contextSettings;
-	contextSettings.antialiasingLevel = 8;
+	//contextSettings.antialiasingLevel = 1;
 	//VideoMode videoMode = VideoMode::getDesktopMode();
-	VideoMode videoMode = VideoMode(300, 600);
-	RenderWindow window(videoMode, "", Style::Fullscreen, contextSettings);
-
+	VideoMode videoMode = VideoMode(600, 600);
+	RenderWindow window(videoMode, "", Style::Default, contextSettings);
+	//window.setVerticalSyncEnabled(true);
+	//Font font;
+	//font.loadFromFile("C:/Windows/Fonts/Arial.ttf");
+	Texture waterTexture;
+	waterTexture.loadFromFile("Resources/water.png");
 	Clock logic;
 	Time accumulate = Time::Zero;
 	bool running = true;
@@ -111,15 +117,27 @@ int main()
 			accumulate -= data::delta;
 			if (Mouse::isButtonPressed(Mouse::Left))
 			{
-				
 				Vector2f mousePosition = Vector2f(Mouse::getPosition(window));
 				if (mousePosition.x > 0 && mousePosition.x < width && mousePosition.y > 0 && mousePosition.y < height) 
 				{
 					int radius = 10;
 					Vector2f position = mousePosition + Vector2f(data::generateNumber(-radius, radius), data::generateNumber(-radius, radius));
-					//Vector2f position = mousePosition;
-					Water particle(position, 5.f);
+					Water particle(position, 10.f);
 					water.push_back(particle);
+				}
+			}
+			if (Mouse::isButtonPressed(Mouse::Right))
+			{
+				Vector2f mousePosition = Vector2f(Mouse::getPosition(window));
+				if (mousePosition.x > 0 && mousePosition.x < width && mousePosition.y > 0 && mousePosition.y < height)
+				{
+					Concurrency::parallel_for(0, (int)water.size(), [&](int i)
+					{
+						Vector2f vector = water[i].position - mousePosition;
+						vector = vector / data::lengthVector(vector);
+						float distance = data::distance(mousePosition, water[i].position);
+						water[i].force += vector * (float)(pow(10, 5) / distance);
+					});
 				}
 			}
 		}
@@ -129,13 +147,15 @@ int main()
 
 		for (size_t i = 0; i < water.size(); i++)
 		{
-			float radius = water[i].getRadius();
-			Vector2f position = water[i].getPosition();
-			CircleShape particleDraw(radius);
-			particleDraw.setOrigin(radius, radius);
-			particleDraw.setPosition(position);
-			particleDraw.setFillColor(Color::Blue);
-			window.draw(particleDraw);
+			float radius = water[i].radius;
+			Vector2f position = water[i].position;
+			Vector2u sizeTexture = waterTexture.getSize();
+			Sprite sprite;
+			sprite.setTexture(waterTexture);
+			sprite.setScale(radius / sizeTexture.x, radius / sizeTexture.y);
+			sprite.setOrigin(radius / 2, radius / 2);
+			sprite.setPosition(position);
+			window.draw(sprite);
 		}
 		window.setTitle(std::to_string(water.size()));
 		window.display();

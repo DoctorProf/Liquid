@@ -22,7 +22,7 @@ float data::lengthVector(Vector2f vector)
 float data::collisionSquare(Particle particle, Vector2f position, Vector2f size) 
 {
 	//Vector2f direction = particle.getForce() / lengthVector(particle.getForce());
-	Vector2f positionPart = particle.getPosition();
+	Vector2f positionPart = particle.position;
 	return (positionPart.x > position.x && positionPart.x < size.x) &&
 		(positionPart.y > position.y && positionPart.y < size.y);
 }
