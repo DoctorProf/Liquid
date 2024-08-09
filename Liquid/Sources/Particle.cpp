@@ -3,8 +3,10 @@
 Particle::Particle(Vector2f position, float radius)
 {
 	this->position = position;
+	this->positionPrevious = {};
 	this->radius = radius;
-	this->block = false;
+	this->force = {};
+	this->velocity = {};
 }
 void Particle::setRadius(float radius)
 {
@@ -40,7 +42,6 @@ Vector2f Particle::getVelocity()
 }
 void Particle::updateDerivatives(float deltaTime)
 {
-	if (block) return;
 	positionPrevious = position;
 	velocity += force * deltaTime;
 	position += velocity * deltaTime;
@@ -53,10 +54,6 @@ void Particle::resetDerivatives(float deltaTime)
 void Particle::move(Vector2f vector)
 {
 	position += vector;
-}
-void Particle::setBlock(bool block)
-{
-	this->block = block;
 }
 bool Particle::operator==(const Particle& other) const
 {

@@ -5,9 +5,10 @@
 namespace physics 
 {
 	extern Vector2f gravity;
-	void applyGravity(Particle& particle);
-	void applyAirFriction(Particle& particle);
-	//void satisfyConstraints(Particle& particle, std::vector<Particle>& particles);
-	void collisionWithBoundaries(Particle& particle, float& width, float& height);
-	void collisionParticles(Particle& particle, std::vector<Particle>& particles);
+	void applyGravity(std::vector<Particle>& particles);
+	void applyAirFriction(std::vector<Particle>& particles);
+	void updateDerivatives(std::vector<Particle>& particles);
+	void collisionWithBoundaries(std::vector<Particle>& particles, float& width, float& height);
+	void collisionParticles(std::vector<Particle>& particles);
+	void resetDerivatives(std::vector<Particle>& particles);
 }

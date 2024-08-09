@@ -1,5 +1,6 @@
 #include <iostream>
 #include "Headers/Physics.hpp"
+#include <thread>
 
 VertexArray createGrid(int radius, float& width, float& height)
 {
@@ -38,17 +39,39 @@ VertexArray createGrid(int radius, float& width, float& height)
 	}
 	return grid;
 }
+void simulation(std::vector<Particle>& water, bool& running, bool& pause, float& width, float& height)
+{
+	Clock logic;
+	Time accumulate = Time::Zero;
+
+	while (running) 
+	{
+		accumulate += logic.restart();
+		if (accumulate >= data::delta)
+		{
+			accumulate -= data::delta;
+			if (!pause)
+			{
+				physics::applyGravity(water);
+				physics::applyAirFriction(water);
+				physics::updateDerivatives(water);
+				physics::collisionWithBoundaries(water, width, height);
+				physics::collisionParticles(water);
+				physics::resetDerivatives(water);
+			}
+		}
+	}
+}
 int main()
 {
 	ContextSettings contextSettings;
 	contextSettings.antialiasingLevel = 8;
 	//VideoMode videoMode = VideoMode::getDesktopMode();
-	VideoMode videoMode = VideoMode(600, 600);
-	RenderWindow window(videoMode, "", Style::Default, contextSettings);
+	VideoMode videoMode = VideoMode(300, 600);
+	RenderWindow window(videoMode, "", Style::Fullscreen, contextSettings);
 
 	Clock logic;
 	Time accumulate = Time::Zero;
-	Time delta = seconds(1.0f / 30.0f);
 	bool running = true;
 	bool pause = false;
 
@@ -57,7 +80,8 @@ int main()
 
 	std::vector<Particle> water;
 
-	Clock debug;
+	std::thread threadSumulation(&simulation, std::ref(water), std::ref(running), std::ref(pause), std::ref(width), std::ref(height));
+	threadSumulation.detach();
 
 	while (running) 
 	{
@@ -82,31 +106,22 @@ int main()
 			}
 		}
 		accumulate += logic.restart();
-		if (accumulate >= delta) 
+		if (accumulate >= data::delta)
 		{
-			accumulate -= delta;
+			accumulate -= data::delta;
 			if (Mouse::isButtonPressed(Mouse::Left))
 			{
+				
 				Vector2f mousePosition = Vector2f(Mouse::getPosition(window));
-				int radius = 20;
-				Vector2f position = mousePosition + Vector2f(data::generateNumber(-radius, radius), data::generateNumber(-radius, radius));
-				Water particle(position, 15.f);
-				water.push_back(particle);
-			}
-			if (!pause) 
-			{
-				debug.restart();
-				for (size_t i = 0; i < water.size(); i++)
+				if (mousePosition.x > 0 && mousePosition.x < width && mousePosition.y > 0 && mousePosition.y < height) 
 				{
-					physics::applyGravity(water[i]);
-					physics::applyAirFriction(water[i]);
-					water[i].updateDerivatives(delta.asSeconds());
-					physics::collisionWithBoundaries(water[i], width, height);
-					physics::collisionParticles(water[i], water);
-					water[i].resetDerivatives(delta.asSeconds());
+					int radius = 10;
+					Vector2f position = mousePosition + Vector2f(data::generateNumber(-radius, radius), data::generateNumber(-radius, radius));
+					//Vector2f position = mousePosition;
+					Water particle(position, 5.f);
+					water.push_back(particle);
 				}
-				std::cout << water.size() << " Time " << debug.restart().asMilliseconds() << std::endl;
-			}	
+			}
 		}
 		
 		window.clear(Color::Black);

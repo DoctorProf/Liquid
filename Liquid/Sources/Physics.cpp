@@ -1,60 +1,83 @@
 #include "../Headers/Physics.hpp"
 
-Vector2f physics::gravity = Vector2f(0, 1000);
+Vector2f physics::gravity = Vector2f(0, 200);
 
-void physics::applyGravity(Particle& particle)
+void physics::applyGravity(std::vector<Particle>& particles)
 {
-	particle.setForce(particle.getForce() + gravity);
-}
-void physics::applyAirFriction(Particle& particle)
-{
-	float friction = 0.6f;
-	particle.setForce(particle.getForce() - particle.getVelocity() * friction);
-}
-void physics::collisionWithBoundaries(Particle& particle, float& width, float& height)
-{
-	if (!data::collisionSquare(particle, Vector2f(0, 0), Vector2f(width, height)))
-	{
-        Vector2f position = particle.getPosition();
-        Vector2f positionPointScreen;
-
-        if (position.x > width) positionPointScreen = Vector2f(width, position.y);
-        else if(position.x < 0) positionPointScreen = Vector2f(0, position.y);
-        else if(position.y > height) positionPointScreen = Vector2f(position.x, height);
-        else if (position.y < 0) positionPointScreen = Vector2f(position.x, 0);
-
-        Vector2f direction = positionPointScreen - position;
-        direction = direction / data::lengthVector(direction);
-        float distance = data::distance(position , positionPointScreen);
-        float radius = particle.getRadius();
-        /*float c;
-        if (distance > radius) c = distance - radius;
-        else c = radius - distance;*/
-        Vector2f p = (distance) * direction;
-
-        particle.move(p);
-	}
-}
-void physics::collisionParticles(Particle& particle, std::vector<Particle>& particles)
-{
-    Vector2f step;
-    for (Particle otherParticle : particles)
+    for (size_t i = 0; i < particles.size(); i++)
     {
-        if (particle == otherParticle) continue;
-
-        Vector2f direction = particle.getPosition() - otherParticle.getPosition();
-        direction = direction / data::lengthVector(direction);
-        float distance = data::distance(particle.getPosition(), otherParticle.getPosition());
-
-        double minDistance = particle.getRadius() + otherParticle.getRadius();
-        if (distance < minDistance)
+        particles[i].setForce(particles[i].getForce() + gravity);
+    }
+}
+void physics::applyAirFriction(std::vector<Particle>& particles)
+{
+    float friction = 0.6f;
+    for (size_t i = 0; i < particles.size(); i++)
+    {
+        particles[i].setForce(particles[i].getForce() - particles[i].getVelocity() * friction);
+    }
+}
+void physics::updateDerivatives(std::vector<Particle>& particles)
+{
+    for (size_t i = 0; i < particles.size(); i++)
+    {
+        particles[i].updateDerivatives(data::delta.asSeconds());
+    }
+}
+void physics::collisionWithBoundaries(std::vector<Particle>& particles, float& width, float& height)
+{
+    for (size_t i = 0; i < particles.size(); i++)
+    {
+        if (!data::collisionSquare(particles[i], Vector2f(0, 0), Vector2f(width, height)))
         {
-            float c = minDistance - distance;
-            Vector2f p = -c * direction;
-            step += -p;
-            //particle.move(-p);
-            otherParticle.move(p);
+            Vector2f position = particles[i].getPosition();
+            Vector2f positionPointScreen;
+
+            if (position.x > width) positionPointScreen = Vector2f(width, position.y);
+            else if (position.x < 0) positionPointScreen = Vector2f(0, position.y);
+            else if (position.y > height) positionPointScreen = Vector2f(position.x, height);
+            else if (position.y < 0) positionPointScreen = Vector2f(position.x, 0);
+
+            Vector2f direction = positionPointScreen - position;
+            direction = direction / data::lengthVector(direction);
+            float distance = data::distance(position, positionPointScreen);
+            float radius = particles[i].getRadius();
+            Vector2f p = (distance)*direction * 0.5f;
+
+            particles[i].move(p);
         }
     }
-    particle.move(step);
+}
+void physics::collisionParticles(std::vector<Particle>& particles)
+{
+    for (Particle& particle : particles)
+    {
+        Vector2f step;
+        for (Particle& otherParticle : particles)
+        {
+            if (particle == otherParticle) continue;
+
+            Vector2f direction = particle.getPosition() - otherParticle.getPosition();
+            direction = direction / data::lengthVector(direction);
+            float distance = data::distance(particle.getPosition(), otherParticle.getPosition());
+
+            double minDistance = particle.getRadius() + otherParticle.getRadius();
+            if (distance < minDistance)
+            {
+                float c = minDistance - distance;
+                Vector2f p = -c * direction * 0.2f;
+                step += -p;
+                //particle.move(-p);
+                otherParticle.move(p);
+            }
+        }
+        particle.move(step);
+    }
+}
+void physics::resetDerivatives(std::vector<Particle>& particles)
+{
+    for (size_t i = 0; i < particles.size(); i++)
+    {
+        particles[i].resetDerivatives(data::delta.asSeconds());
+    }
 }

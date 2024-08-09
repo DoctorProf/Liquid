@@ -9,6 +9,7 @@ namespace data
 {
 	extern random::mt19937 rng;
 	extern float PI;
+	extern Time delta;
 
 	float distance(Vector2f vec1, Vector2f vec2);
 	int generateNumber(int min, int max);

@@ -26,5 +26,4 @@ protected:
 	Vector2f force;
 	Vector2f velocity;
 	float radius;
-	bool block;
 };

@@ -2,6 +2,7 @@
 
 boost::random::mt19937 data::rng(time(NULL));
 float data::PI = 3.141592;
+Time data::delta = seconds(1.f / 60.f);
 
 float data::distance(Vector2f vec1, Vector2f vec2)
 {
