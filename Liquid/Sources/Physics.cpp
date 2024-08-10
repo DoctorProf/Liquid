@@ -1,105 +1,108 @@
 #include "../Headers/Physics.hpp"
 
-Vector2f physics::gravity = Vector2f(0, 200);
+Vector2f physics::gravity = Vector2f(0, 9.8);
+std::vector<Particle*> physics::particles;
+float physics::width;
+float physics::height;
 
-void physics::applyGravity(std::vector<Particle>& particles)
+void physics::applyGravity()
 {
-    Concurrency::parallel_for(0, (int)particles.size(), [&](int i)
-        {
-            particles[i].force += gravity;
-        });
-}
-//void physics::applyAirFriction(std::vector<Particle>& particles)
-//{
-//    float friction = 0.6f;
-//    Concurrency::parallel_for(0, (int)particles.size(), [&](int i)
-//        {
-//            particles[i].force -= particles[i].velocity * friction;
-//        });
-//
-//}
-void physics::updateDerivatives(std::vector<Particle>& particles)
-{
-    Concurrency::parallel_for(0, (int)particles.size(), [&](int i)
-        {
-            particles[i].updateDerivatives(data::delta.asSeconds());
-        });
-}
-void physics::collisionWithBoundaries(std::vector<Particle>& particles, float& width, float& height)
-{
-    Concurrency::parallel_for(0, (int)particles.size(), [&](int i)
-        {
-            if (!data::collisionSquare(particles[i], Vector2f(0, 0), Vector2f(width, height)))
-            {
-                Vector2f position = particles[i].position;
-                Vector2f positionPointScreen;
-
-                if (position.x > width) positionPointScreen = Vector2f(width, position.y);
-                else if (position.x < 0) positionPointScreen = Vector2f(0, position.y);
-                else if (position.y > height) positionPointScreen = Vector2f(position.x, height);
-                else if (position.y < 0) positionPointScreen = Vector2f(position.x, 0);
-
-                Vector2f direction = positionPointScreen - position;
-                direction = direction / data::lengthVector(direction);
-                float distance = data::distance(position, positionPointScreen);
-                float radius = particles[i].radius;
-                Vector2f p = (distance)*direction * 0.5f;
-
-                particles[i].move(p);
-            }
-        });
-}
-void physics::collisionParticles(std::vector<Particle>& particles)
-{
-    Concurrency::parallel_for(0, (int)particles.size(), [&](int i)
-        {
-            Vector2f step;
-            Concurrency::parallel_for(i + 1, (int)particles.size(), [&](int j)
-                {
-                    if (particles[i] != particles[j]) 
-                    {
-                        Vector2f direction = particles[i].position - particles[j].position;
-                        direction = direction / data::lengthVector(direction);
-                        float distance = data::distance(particles[i].position, particles[j].position);
-
-                        double minDistance = particles[i].radius + particles[j].radius;
-                        if (distance < minDistance)
-                        {
-                            float c = minDistance - distance;
-                            Vector2f p = -c * direction * 0.2f;
-                            step += -p;
-                            particles[j].move(p);
-                        }
-                    }
-                });
-            particles[i].move(step);
-        });
-   /* for (size_t i = 0; i < particles.size(); i++)
+    for (int i = 0; i < particles.size(); i++)
     {
-        Vector2f step;
-        for (size_t j = i + 1; j < particles.size(); j++)
-        {
-            if (particles[i] == particles[j]) continue;
-            Vector2f direction = particles[i].position - particles[j].position;
-            direction = direction / data::lengthVector(direction);
-            float distance = data::distance(particles[i].position, particles[j].position);
+        particles[i]->force += gravity;
+    }
+}
+void physics::updateDerivatives(float delta)
+{
+    for (int i = 0; i < particles.size(); i++)
+    {
+        particles[i]->updateDerivatives(delta);
+    }
+}
+void physics::collisionWithBoundaries()
+{
+    for (int i = 0; i < particles.size(); i++)
+    {
+        float margin = particles[i]->radius * 2;
+        if (particles[i]->position.x > width - margin) particles[i]->position.x = width - margin;
+        else if (particles[i]->position.x < margin) particles[i]->position.x = margin;
+        if (particles[i]->position.y > height - margin)  particles[i]->position.y = height - margin;
+        else if (particles[i]->position.y < margin) particles[i]->position.y = margin;
+    }
+}
+void physics::resetDerivatives()
+{
+    for (int i = 0; i < particles.size(); i++)
+    {
+        particles[i]->resetDerivatives(data::delta.asSeconds());
+    }
+}
+bool physics::collide(int firstIndex, int secondIndex)
+{
+    return data::distance(particles[firstIndex]->position, particles[secondIndex]->position) < particles[firstIndex]->radius + particles[secondIndex]->radius;
+}
+void physics::solveCollide(int firstIndex, int secondIndex)
+{
+    Vector2f direction = particles[firstIndex]->position - particles[secondIndex]->position;
+    direction = direction / data::lengthVector(direction);
+    float distance = data::distance(particles[firstIndex]->position, particles[secondIndex]->position);
 
-            double minDistance = particles[i].radius + particles[j].radius;
-            if (distance < minDistance)
+    double minDistance = particles[firstIndex]->radius + particles[secondIndex]->radius;
+    float c = (minDistance - distance) * 0.55f;
+    Vector2f p = -c * direction;
+    particles[firstIndex]->move(-p);
+    particles[secondIndex]->move(p);
+}
+void physics::checkCells(Grid& grid)
+{
+    grid.clear();
+    for (size_t i = 0; i < particles.size(); i++)
+    {
+        Vector2i position = Vector2i(particles[i]->position / (particles[i]->radius * 2));
+        //std::cout << i << " " << position.x << " " << position.y << std::endl;
+        if (position.x >= 0 && position.x < grid.width && position.y >= 0 && position.y < grid.height) grid.cells[position.y][position.x]->particlesIndex.push_back(i);
+    }
+}
+void physics::checkCellsCollision(Cell*& cell1, Cell*& cell2)
+{
+    for (int& particleIndex : cell1->particlesIndex)
+    {
+        for (int& otherParticleIndex : cell2->particlesIndex)
+        {
+            if (particleIndex != otherParticleIndex)
             {
-                float c = minDistance - distance;
-                Vector2f p = -c * direction * 0.2f;
-                step += -p;
-                particles[j].move(p);
+                if (collide(particleIndex, otherParticleIndex)) solveCollide(particleIndex, otherParticleIndex);
             }
         }
-        particles[i].move(step);
-    }*/
+    }
 }
-void physics::resetDerivatives(std::vector<Particle>& particles)
+void physics::findCollisionGrid(Grid& grid)
 {
-    Concurrency::parallel_for(0, (int)particles.size(), [&](int i)
+    for (int i = 0; i < grid.height; i++)
+    {
+        for (int j = 0; j < grid.width; j++)
         {
-            particles[i].resetDerivatives(data::delta.asSeconds());
-        });
+            auto& currentCell = grid.cells[i][j];
+            for (int di = -1; di <= 1; di++)
+            {
+                for (int dj = -1; dj <= 1; dj++)
+                {
+                    if ((i + di < 0 || i + di > grid.height - 1) || (j + dj < 0 || j + dj > grid.width - 1)) continue;
+                    auto& otherCell = grid.cells[i + di][j + dj];
+                    checkCellsCollision(currentCell, otherCell);
+                }
+            }
+        }
+    }
+}
+void physics::simulation(Grid& grid)
+{
+    int subStep = 8;
+    float subDt = data::delta.asSeconds() / (float)subStep;
+    for (int i = 0; i < subStep; i++) 
+    {
+        checkCells(grid);
+        findCollisionGrid(grid);
+        updateDerivatives(subDt);
+    }
 }

@@ -1,15 +1,25 @@
 #pragma once
 #include <iostream>
 #include "Data.hpp"
-#include <ppl.h>
+#include "Grid.hpp"
 
 namespace physics 
 {
 	extern Vector2f gravity;
-	void applyGravity(std::vector<Particle>& particles);
-	//void applyAirFriction(std::vector<Particle>& particles);
-	void updateDerivatives(std::vector<Particle>& particles);
-	void collisionWithBoundaries(std::vector<Particle>& particles, float& width, float& height);
-	void collisionParticles(std::vector<Particle>& particles);
-	void resetDerivatives(std::vector<Particle>& particles);
+	extern std::vector<Particle*> particles;
+	extern float width;
+	extern float height;
+
+	void applyGravity();
+	void updateDerivatives(float delta);
+	void collisionWithBoundaries();
+	void resetDerivatives();
+
+	bool collide(int firstIndex, int secondIndex);
+	void solveCollide(int firstIndex, int secondIndex);
+
+	void checkCells(Grid& grid);
+	void findCollisionGrid(Grid& grid);
+	void checkCellsCollision(Cell*& cell1, Cell*& cell2);
+	void simulation(Grid& grid);
 }

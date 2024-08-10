@@ -20,16 +20,18 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp" />
+    <ClCompile Include="Sources\Cell.cpp" />
     <ClCompile Include="Sources\Data.cpp" />
+    <ClCompile Include="Sources\Grid.cpp" />
     <ClCompile Include="Sources\Particle.cpp" />
     <ClCompile Include="Sources\Physics.cpp" />
-    <ClCompile Include="Sources\Water.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="Headers\Cell.hpp" />
     <ClInclude Include="Headers\Data.hpp" />
+    <ClInclude Include="Headers\Grid.hpp" />
     <ClInclude Include="Headers\Particle.hpp" />
     <ClInclude Include="Headers\Physics.hpp" />
-    <ClInclude Include="Headers\Water.hpp" />
   </ItemGroup>
   <ItemGroup>
     <Image Include="Resources\water.png" />

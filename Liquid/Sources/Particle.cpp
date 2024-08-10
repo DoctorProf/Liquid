@@ -11,7 +11,7 @@ Particle::Particle(Vector2f position, float radius)
 void Particle::updateDerivatives(float deltaTime)
 {
 	positionPrevious = position;
-	velocity += force * deltaTime;
+	velocity += force;
 	position += velocity * deltaTime;
 }
 void Particle::resetDerivatives(float deltaTime)
@@ -21,6 +21,7 @@ void Particle::resetDerivatives(float deltaTime)
 }
 void Particle::move(Vector2f vector)
 {
+	positionPrevious = position;
 	position += vector;
 }
 bool Particle::operator==(const Particle& other) const

@@ -42,52 +42,48 @@ VertexArray createGrid(int radius, float& width, float& height)
 	}
 	return grid;
 }
-void simulation(std::vector<Particle>& water, bool& running, bool& pause, float& width, float& height)
-{
-	Clock logic;
-	Time accumulate = Time::Zero;
-
-	while (running) 
-	{
-		accumulate += logic.restart();
-		if (accumulate >= data::delta)
-		{
-			accumulate -= data::delta;
-			if (!pause)
-			{
-				physics::applyGravity(water);
-				physics::updateDerivatives(water);
-				physics::collisionWithBoundaries(water, width, height);
-				physics::collisionParticles(water);
-				physics::resetDerivatives(water);
-			}
-		}
-	}
-}
+//void simulation(std::vector<Particle*>& particles, Grid& grid, bool& running, bool& pause, float& width, float& height)
+//{
+//	Clock logic;
+//	Time accumulate = Time::Zero;
+//
+//	while (running) 
+//	{
+//		accumulate += logic.restart();
+//		if (accumulate >= data::delta)
+//		{
+//			accumulate -= data::delta;
+//			if (!pause)
+//			{
+//				physics::applyGravity();
+//				physics::updateDerivatives();
+//				physics::collisionWithBoundaries(width, height);
+//				physics::checkCells(grid);
+//				physics::findCollisionGrid(grid);
+//				physics::resetDerivatives();
+//			}
+//		}
+//	}
+//}
 int main()
 {
-	ContextSettings contextSettings;
-	//contextSettings.antialiasingLevel = 1;
-	//VideoMode videoMode = VideoMode::getDesktopMode();
-	VideoMode videoMode = VideoMode(600, 600);
-	RenderWindow window(videoMode, "", Style::Default, contextSettings);
-	//window.setVerticalSyncEnabled(true);
-	//Font font;
-	//font.loadFromFile("C:/Windows/Fonts/Arial.ttf");
+	VideoMode videoMode = VideoMode::getDesktopMode();
+	RenderWindow window(videoMode, "", Style::Fullscreen);
+
 	Texture waterTexture;
 	waterTexture.loadFromFile("Resources/water.png");
-	Clock logic;
-	Time accumulate = Time::Zero;
 	bool running = true;
 	bool pause = false;
 
-	float width = videoMode.width;
-	float height = videoMode.height;
+	physics::width = videoMode.width;
+	physics::height = videoMode.height;
 
-	std::vector<Particle> water;
+	float radius = 5.f;
 
-	std::thread threadSumulation(&simulation, std::ref(water), std::ref(running), std::ref(pause), std::ref(width), std::ref(height));
-	threadSumulation.detach();
+	Grid grid(physics::width / (radius * 2), physics::height / (radius * 2), radius * 2);
+
+	//std::thread threadSumulation(&simulation, std::ref(particles), std::ref(grid), std::ref(running), std::ref(pause), std::ref(width), std::ref(height));
+	//threadSumulation.detach();
 
 	while (running) 
 	{
@@ -100,7 +96,7 @@ int main()
 			}
 			if (event.type == Event::KeyPressed && event.key.code == Keyboard::C) 
 			{
-				water.clear();
+				physics::particles.clear();
 			}
 			if (event.type == Event::KeyPressed && event.key.code == Keyboard::Space)
 			{
@@ -111,53 +107,57 @@ int main()
 				physics::gravity = -physics::gravity;
 			}
 		}
-		accumulate += logic.restart();
-		if (accumulate >= data::delta)
+		if (Mouse::isButtonPressed(Mouse::Left))
 		{
-			accumulate -= data::delta;
-			if (Mouse::isButtonPressed(Mouse::Left))
+			Vector2f mousePosition = Vector2f(Mouse::getPosition(window));
+			if (mousePosition.x > 0 && mousePosition.x < physics::width && mousePosition.y > 0 && mousePosition.y < physics::height)
 			{
-				Vector2f mousePosition = Vector2f(Mouse::getPosition(window));
-				if (mousePosition.x > 0 && mousePosition.x < width && mousePosition.y > 0 && mousePosition.y < height) 
-				{
-					int radius = 10;
-					Vector2f position = mousePosition + Vector2f(data::generateNumber(-radius, radius), data::generateNumber(-radius, radius));
-					Water particle(position, 10.f);
-					water.push_back(particle);
-				}
+				Vector2f position = mousePosition + Vector2f(data::generateNumber(-radius, radius), data::generateNumber(-radius, radius));
+				Particle* particle = new Particle(position, radius);
+				physics::particles.push_back(particle);
+;
 			}
-			if (Mouse::isButtonPressed(Mouse::Right))
+		}
+		if (Mouse::isButtonPressed(Mouse::Right))
+		{
+			Vector2f mousePosition = Vector2f(Mouse::getPosition(window));
+			if (mousePosition.x > 0 && mousePosition.x < physics::width && mousePosition.y > 0 && mousePosition.y < physics::height)
 			{
-				Vector2f mousePosition = Vector2f(Mouse::getPosition(window));
-				if (mousePosition.x > 0 && mousePosition.x < width && mousePosition.y > 0 && mousePosition.y < height)
+				for (int i = 0; i < physics::particles.size(); i++)
 				{
-					Concurrency::parallel_for(0, (int)water.size(), [&](int i)
-					{
-						Vector2f vector = water[i].position - mousePosition;
-						vector = vector / data::lengthVector(vector);
-						float distance = data::distance(mousePosition, water[i].position);
-						water[i].force += vector * (float)(pow(10, 5) / distance);
-					});
+					Vector2f vector = physics::particles[i]->position - mousePosition;
+					vector = vector / data::lengthVector(vector);
+					float distance = data::distance(mousePosition, physics::particles[i]->position);
+					physics::particles[i]->force += vector * (float)(pow(10, 4) / distance);
 				}
 			}
 		}
 		
-		window.clear(Color::Black);
-		window.draw(createGrid(10, width, height));
-
-		for (size_t i = 0; i < water.size(); i++)
+		if (!pause)
 		{
-			float radius = water[i].radius;
-			Vector2f position = water[i].position;
+			physics::applyGravity();
+			physics::updateDerivatives(data::delta.asSeconds());
+			physics::collisionWithBoundaries();
+			physics::checkCells(grid);
+			physics::findCollisionGrid(grid);
+			physics::resetDerivatives();
+		}
+		
+		window.clear(Color::Black);
+		//window.draw(createGrid(radius, physics::width, physics::height));
+
+		for (int i = 0; i < physics::particles.size(); i++)
+		{
+			Vector2f position = physics::particles[i]->position;
 			Vector2u sizeTexture = waterTexture.getSize();
 			Sprite sprite;
 			sprite.setTexture(waterTexture);
-			sprite.setScale(radius / sizeTexture.x, radius / sizeTexture.y);
-			sprite.setOrigin(radius / 2, radius / 2);
+			sprite.setScale(radius * 2 / sizeTexture.x, radius * 2 / sizeTexture.y);
+			sprite.setOrigin(radius, radius);
 			sprite.setPosition(position);
 			window.draw(sprite);
 		}
-		window.setTitle(std::to_string(water.size()));
+		window.setTitle(std::to_string(physics::particles.size()));
 		window.display();
 	}
 	return 0;
