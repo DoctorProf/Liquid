@@ -4,11 +4,10 @@
 class Grid
 {
 public:
-	Grid(float width, float height,	float sizeCell);
+	Grid(float width, float height);
 	void clear();
 
 	float width;
 	float height;
-	float sizeCell;
 	std::vector<std::vector<Cell*>> cells;
 };

@@ -2,7 +2,7 @@
 
 boost::random::mt19937 data::rng(time(NULL));
 float data::PI = 3.141592;
-Time data::delta = seconds(1.f / 60.f);
+Time data::delta = seconds(1.f / 20.f);
 
 float data::distance(Vector2f vec1, Vector2f vec2)
 {
@@ -18,11 +18,4 @@ int data::generateNumber(int min, int max)
 float data::lengthVector(Vector2f vector)
 {
 	return sqrt(pow(vector.x, 2) + pow(vector.y, 2));
-}
-float data::collisionSquare(Particle* particle, Vector2f position, Vector2f size)
-{
-	//Vector2f direction = particle.getForce() / lengthVector(particle.getForce());
-	Vector2f positionPart = particle->position;
-	return (positionPart.x > position.x && positionPart.x < size.x) &&
-		(positionPart.y > position.y && positionPart.y < size.y);
 }

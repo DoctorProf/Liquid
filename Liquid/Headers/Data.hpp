@@ -1,7 +1,8 @@
 #pragma once
 #include <boost/random.hpp>
-#include "Particle.hpp"
+#include <SFML/Graphics.hpp>
 
+using namespace sf;
 using namespace boost;
 
 namespace data 
@@ -13,5 +14,4 @@ namespace data
 	float distance(Vector2f vec1, Vector2f vec2);
 	int generateNumber(int min, int max);
 	float lengthVector(Vector2f vector);
-	float collisionSquare(Particle* particle, Vector2f position, Vector2f size);
 }

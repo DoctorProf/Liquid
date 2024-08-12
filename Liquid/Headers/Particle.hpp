@@ -1,7 +1,6 @@
 #pragma once
-#include <SFML/Graphics.hpp>
+#include "Data.hpp"
 
-using namespace sf;
 
 class Particle 
 {
