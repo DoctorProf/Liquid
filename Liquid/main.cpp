@@ -103,7 +103,7 @@ int main()
 					Vector2f vector = physics::particles[i]->position - mousePosition;
 					vector = vector / data::lengthVector(vector);
 					float distance = data::distance(mousePosition, physics::particles[i]->position);
-					physics::particles[i]->force += vector * (float)(pow(10, 4) / distance);
+					physics::particles[i]->force += vector * (float)(pow(10, 3) / distance);
 				}
 			}
 		}
