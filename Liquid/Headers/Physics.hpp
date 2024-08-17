@@ -4,6 +4,7 @@
 #include "Grid.hpp"
 #include <thread>
 #include <ppl.h>
+#include "Material.hpp"
 
 namespace physics 
 {
@@ -13,16 +14,17 @@ namespace physics
 	extern float height;
 	extern float radius;
 	extern Grid grid;
+	extern std::vector<Material*> materials;
 
 	void applyGravity();
 	void updateDerivatives(float delta);
 	void collisionWithBoundaries();
 	void resetDerivatives();
 
-	bool collide(int firstIndex, int secondIndex);
+	bool collide(Vector2f positionFirst, Vector2f positionSecond);
 	void solveCollide(int firstIndex, int secondIndex);
 	void checkCells();
 	void findCollisionGrid();
 	void checkCellsCollision(Cell*& cell1, Cell*& cell2);
-	//void threadFindCollision();
+	void findCollisionMaterial();
 }

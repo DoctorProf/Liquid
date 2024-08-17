@@ -1,10 +1,9 @@
 #include "../Headers/Particle.hpp"
 
-Particle::Particle(Vector2f position, float radius)
+Particle::Particle(Vector2f position)
 {
 	this->position = position;
 	this->positionPrevious = position;
-	this->radius = radius;
 	this->force = Vector2f(0, 0);
 	this->velocity = Vector2f(0, 0);
 }

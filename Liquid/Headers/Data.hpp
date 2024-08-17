@@ -12,6 +12,6 @@ namespace data
 	extern Time delta;
 
 	float distance(Vector2f vec1, Vector2f vec2);
-	int generateNumber(int min, int max);
+	float generateNumber(float min, float max);
 	float lengthVector(Vector2f vector);
 }

@@ -23,6 +23,7 @@
     <ClCompile Include="Sources\Cell.cpp" />
     <ClCompile Include="Sources\Data.cpp" />
     <ClCompile Include="Sources\Grid.cpp" />
+    <ClCompile Include="Sources\Material.cpp" />
     <ClCompile Include="Sources\Particle.cpp" />
     <ClCompile Include="Sources\Physics.cpp" />
   </ItemGroup>
@@ -30,11 +31,9 @@
     <ClInclude Include="Headers\Cell.hpp" />
     <ClInclude Include="Headers\Data.hpp" />
     <ClInclude Include="Headers\Grid.hpp" />
+    <ClInclude Include="Headers\Material.hpp" />
     <ClInclude Include="Headers\Particle.hpp" />
     <ClInclude Include="Headers\Physics.hpp" />
-  </ItemGroup>
-  <ItemGroup>
-    <Image Include="Resources\water.png" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <VCProjectVersion>17.0</VCProjectVersion>

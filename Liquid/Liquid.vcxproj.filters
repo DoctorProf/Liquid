@@ -33,6 +33,9 @@
     <ClCompile Include="Sources\Cell.cpp">
       <Filter>Исходные файлы</Filter>
     </ClCompile>
+    <ClCompile Include="Sources\Material.cpp">
+      <Filter>Исходные файлы</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Headers\Particle.hpp">
@@ -50,10 +53,8 @@
     <ClInclude Include="Headers\Cell.hpp">
       <Filter>Файлы заголовков</Filter>
     </ClInclude>
-  </ItemGroup>
-  <ItemGroup>
-    <Image Include="Resources\water.png">
-      <Filter>Файлы ресурсов</Filter>
-    </Image>
+    <ClInclude Include="Headers\Material.hpp">
+      <Filter>Файлы заголовков</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>

@@ -10,7 +10,7 @@ float data::distance(Vector2f vec1, Vector2f vec2)
 	float dy = vec1.y - vec2.y;
 	return std::sqrt(dx * dx + dy * dy);
 }
-int data::generateNumber(int min, int max)
+float data::generateNumber(float min, float max)
 {
 	boost::random::uniform_real_distribution<> dist(min, max);
 	return dist(rng);

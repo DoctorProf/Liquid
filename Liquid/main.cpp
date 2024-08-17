@@ -11,14 +11,17 @@ int main()
 
 	Font font;
 	font.loadFromFile("C://Windows/Fonts/Arial.ttf");
-	Text speed;
-	speed.setCharacterSize(16);
-	speed.setFillColor(Color::White);
-	speed.setFont(font);
-	Texture waterTexture;
-	waterTexture.loadFromFile("Resources/water.png");
+	Text countParticles;
+	countParticles.setCharacterSize(16);
+	countParticles.setFillColor(Color::White);
+	countParticles.setFont(font);
+	countParticles.setPosition(10, 10);
+
 	bool running = true;
 	bool pause = false;
+	bool spawn = true;
+	bool draw = false;
+	Vector2f lastMousePosition;
 
 	VertexArray water;
 	water.setPrimitiveType(Points);
@@ -44,17 +47,48 @@ int main()
 			{
 				physics::gravity = -physics::gravity;
 			}
+			if (event.type == Event::KeyPressed && event.key.code == Keyboard::S)
+			{
+				spawn = !spawn;
+			}
+			if (event.type == Event::KeyPressed && event.key.code == Keyboard::D)
+			{
+				physics::materials.clear();
+			}
+			if (event.type == Event::MouseButtonPressed && event.key.code == Mouse::Left && !spawn)
+			{
+				Vector2f mousePosition;
+				if (!draw) 
+				{
+					mousePosition = Vector2f(Mouse::getPosition(window));
+					lastMousePosition = mousePosition;
+					draw = true;
+				}
+				else 
+				{
+					mousePosition = Vector2f(Mouse::getPosition(window));
+					int count = data::distance(mousePosition, lastMousePosition) / (physics::radius);
+					Vector2f direction = mousePosition - lastMousePosition;
+					direction /= data::lengthVector(direction);
+					for (int i = 0; i < count; ++i) 
+					{
+						physics::materials.push_back(new Material(lastMousePosition));
+						lastMousePosition += physics::radius * direction;
+					}
+					draw = false;
+				}
+			}
 		}
-		if (Mouse::isButtonPressed(Mouse::Left))
+		if (Mouse::isButtonPressed(Mouse::Left) && spawn)
 		{
 			Vector2f mousePosition = Vector2f(Mouse::getPosition(window));
 			if (mousePosition.x > 0 && mousePosition.x < physics::width && mousePosition.y > 0 && mousePosition.y < physics::height)
 			{
 				float radius = physics::radius;
-				for (int i = 0; i < 10; ++i) 
+				for (int i = 0; i < 2; ++i) 
 				{
 					Vector2f position = mousePosition + Vector2f(data::generateNumber(-radius, radius), data::generateNumber(-radius, radius));
-					Particle* particle = new Particle(position, radius);
+					Particle* particle = new Particle(position);
 					physics::particles.push_back(particle);
 				}
 			}
@@ -76,33 +110,25 @@ int main()
 
 		if (!pause)
 		{
-			//physics::applyGravity();
 			physics::updateDerivatives(data::delta.asSeconds());
-			//physics::collisionWithBoundaries();
 			physics::checkCells();
 			physics::findCollisionGrid();
+			physics::findCollisionMaterial();
 			physics::resetDerivatives();
 		}
 		
 		window.clear(Color::Black);
-
-		//for (int i = 0; i < physics::particles.size(); ++i)
-		//{
-		//	float radius = physics::radius;
-		//	Vector2f position = physics::particles[i]->position;
-		//	Vector2u sizeTexture = waterTexture.getSize();
-		//	Sprite sprite;
-		//	sprite.setTexture(waterTexture);
-		//	sprite.setScale(radius * 2 / sizeTexture.x, radius * 2 / sizeTexture.y);
-		//	sprite.setOrigin(radius, radius);
-		//	sprite.setPosition(position);
-		//	window.draw(sprite);
-		//	//speed.setPosition(physics::particles[i]->position + Vector2f(radius, -radius));
-		//	//speed.setString(std::to_string(data::lengthVector(physics::particles[i]->velocity)));
-		//	//window.draw(speed);
-		//}
+		for (int i = 0; i < physics::materials.size(); ++i)
+		{
+			float radius = physics::radius;
+			CircleShape material(radius);
+			material.setFillColor(Color(128, 128, 128));
+			material.setOrigin(radius, radius);
+			material.setPosition(physics::materials[i]->position);
+			window.draw(material);
+		}
 		water.clear();
-		for (int i = 0; i < physics::particles.size(); i++)
+		for (int i = 0; i < physics::particles.size(); ++i)
 		{
 			Vertex point;
 			point.position = physics::particles[i]->position;
@@ -110,7 +136,9 @@ int main()
 			water.append(point);
 		}
 		window.draw(water);
-		window.setTitle(std::to_string(physics::particles.size()));
+		
+		countParticles.setString(std::to_string(physics::particles.size()));
+		window.draw(countParticles);
 		window.display();
 	}
 	return 0;

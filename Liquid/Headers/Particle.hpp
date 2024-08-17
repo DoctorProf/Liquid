@@ -5,7 +5,7 @@
 class Particle 
 {
 public:
-	Particle(Vector2f position, float radius);
+	Particle(Vector2f position);
 	void updateDerivatives(float deltaTime);
 	void resetDerivatives(float deltaTime);
 	void move(Vector2f vector);
@@ -16,5 +16,4 @@ public:
 	Vector2f positionPrevious;
 	Vector2f force;
 	Vector2f velocity;
-	float radius;
 };
